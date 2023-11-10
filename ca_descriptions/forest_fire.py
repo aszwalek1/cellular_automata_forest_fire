@@ -1,4 +1,4 @@
-# Name: Conway's game of life
+# Name: COM3524 Group Assignment Forest Fire
 # Dimensions: 2
 
 # --- Set up executable path, do not edit ---
@@ -18,18 +18,24 @@ import numpy as np
 
 
 def transition_func(grid, neighbourstates, neighbourcounts):
-    # dead = state == 0, live = state == 1
-    # unpack state counts for state 0 and state 1
-    dead_neighbours, live_neighbours = neighbourcounts
+    # chaparral = 0
+    # lake = 1
+    # forest = 2
+    # canyon = 3
+    # town = 4
+    # burning = 5
+    # burnt = 6
+
+    chaparral, lake, forest, canyon, town, burning, burnt = neighbourcounts
     # create boolean arrays for the birth & survival rules
     # if 3 live neighbours and is dead -> cell born
-    birth = (live_neighbours == 3) & (grid == 0)
+    # birth = (live_neighbours == 3) & (grid == 0)
     # if 2 or 3 live neighbours and is alive -> survives
-    survive = ((live_neighbours == 2) | (live_neighbours == 3)) & (grid == 1)
+    # survive = ((live_neighbours == 2) | (live_neighbours == 3)) & (grid == 1)
     # Set all cells to 0 (dead)
     grid[:, :] = 0
     # Set cells to 1 where either cell is born or survives
-    grid[birth | survive] = 1
+    # grid[birth | survive] = 1
     return grid
 
 
@@ -37,16 +43,25 @@ def setup(args):
     config_path = args[0]
     config = utils.load(config_path)
     # ---THE CA MUST BE RELOADED IN THE GUI IF ANY OF THE BELOW ARE CHANGED---
-    config.title = "Conway's game of life"
+    config.title = "Forest Fire"
     config.dimensions = 2
-    config.states = (0, 1)
+    config.states = (0, 1, 2, 3, 4, 5, 6)
     # ------------------------------------------------------------------------
 
     # ---- Override the defaults below (these may be changed at anytime) ----
+    chaparral = (191/255, 190/255, 2/255)
+    lake = (1/255, 176/255, 241/255)
+    forest = (80/255, 98/255, 40/255)
+    canyon = (253/255, 253/255, 9/255)
+    town = (131/255, 105/255, 83/255)
+    burning = (194/255, 24/255, 7/255)
+    burnt = (0, 0, 0)
+    config.state_colors = [chaparral, lake, forest, canyon, town, burning, burnt]
+    scale = 1
 
-    # config.state_colors = [(0,0,0),(1,1,1)]
     # config.num_generations = 150
-    # config.grid_dims = (200,200)
+    config.grid_dims = (50 * scale, 50 * scale)
+    config.initial_grid = grid_setup("incinerator", scale)
 
     # ----------------------------------------------------------------------
 
@@ -56,6 +71,24 @@ def setup(args):
 
     return config
 
+def grid_setup(fire_location, scale):
+    initial_grid = np.full((50 * scale, 50 * scale), 0)
+    initial_grid = define_state(initial_grid, 1, scale, [15, 5], [20, 20])
+    initial_grid = define_state(initial_grid, 2, scale, [0, 25], [20, 35])
+    initial_grid = define_state(initial_grid, 3, scale, [35, 5], [37, 45])
+    initial_grid = define_state(initial_grid, 4, scale, [8, 44], [12, 47])
+
+    return initial_grid
+
+def define_state(grid, state, scale, bottom_left, top_right):
+    bottom_left[0] *= scale
+    top_right[0] *= scale
+
+    for i in range(bottom_left[0], top_right[0]):
+        for j in range(bottom_left[1], top_right[1]):
+            grid[j][i] = state
+
+    return grid
 
 def main():
     # Open the config object
