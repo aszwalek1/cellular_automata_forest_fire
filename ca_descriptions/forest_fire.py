@@ -30,7 +30,7 @@ def transition_func(grid, neighbourstates, neighbourcounts, fuel_grid):
     # burning = 5
     # burnt = 6
 
-    # The cartesian difference between a given cell and its neighbours, in this order: NW, N, NE, W, E, SW, S, SE 
+    # The cartesian difference (x, y) between a given cell and its neighbours, in this order: NW, N, NE, W, E, SW, S, SE 
     deltas = [(1, 1), (0, 1), (-1, 1), (1, 0), (-1, 0), (1, -1), (0, -1), (-1, -1)]
 
     # The cell states that can burn, and their weighting factor.
@@ -154,20 +154,13 @@ def define_state(grid, state, scale, bottom_left, top_right):
         for j in range(bottom_left[1], top_right[1]):
             grid[j][i] = state
         
-    grid[5][1] = 5
+    grid[1][5] = 5
 
     return grid
 
 def add_borders(grid, dimensions):
     """
     Turns the edges of the grid into burnt/inactive cells
-    
-    Args:
-    grid: The grid to wrap the borders around.
-    dimensions: the dimensions of the grid, correctly scaled.
-
-    Returns:
-    grid: The bordered grid
     """
     for x in range(0, dimensions):
         y = 0
@@ -286,7 +279,7 @@ def pburn(deltas, type_weight):
     Returns:
     pburn: The probability of burning. If >= 1, the cell burns, else remains the same.
     """
-    # Time passed in each generation (in minutes)
+    # Amount of time passed in each generation (in minutes) 
     timestep_min = 60
 
     # Initial spread rate of fire
@@ -299,7 +292,7 @@ def pburn(deltas, type_weight):
     wind_speed = 8
 
     # Direction of wind. 0 degrees is north to south, ascends clockwise
-    wind_direction = 180
+    wind_direction = 0
     
     # Base probability irrespective of wind and terrain type
     p0 = basic_prob(cell_size, basic_spread_rate, timestep_min)
