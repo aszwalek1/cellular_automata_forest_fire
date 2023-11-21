@@ -58,12 +58,7 @@ def transition_func(grid, neighbourstates, neighbourcounts, fuel_grid):
         # Canyon cells with burning neighbours
         canyon_burn = (neighbour == 5) & (grid == 3)
         grid[canyon_burn] = randomizer(3, delta, types[3])
-        
 
-
-    ## Apply water to given area to reduce fire
-    if grid[30,10] == 5:
-        grid[30,10] = 6
     return grid
 
 def randomizer(current_state, deltas, type):
