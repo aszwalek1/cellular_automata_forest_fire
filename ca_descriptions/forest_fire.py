@@ -60,6 +60,10 @@ def transition_func(grid, neighbourstates, neighbourcounts, fuel_grid):
         grid[canyon_burn] = randomizer(3, delta, types[3])
         
 
+
+    ## Apply water to given area to reduce fire
+    if grid[30,10] == 5:
+        grid[30,10] = 6
     return grid
 
 def randomizer(current_state, deltas, type):
@@ -213,6 +217,7 @@ def define_fuel(grid, state, scale, bottom_left, top_right):
     top_right[1] *= scale
     
     # Set the fuel value based on the state/terrain type
+    """
     match state:
             case 1:
                 fuel = -1 # Lake (Impossible to ignite)
@@ -222,7 +227,19 @@ def define_fuel(grid, state, scale, bottom_left, top_right):
                 fuel = 7 # Canyon (7 hours)
             case 4:
                 fuel = 1 # Town
-
+            case _:
+                fuel = 0
+    """
+    if state == 1:
+        fuel = -1
+    elif state == 2:
+        fuel = 730
+    elif state == 3: 
+        fuel = 7
+    elif state == 4: 
+        fuel = 1
+    else: 
+        fuel = 0
     # Loop through all cells in the given rectangular block and set the fuel value
     for i in range(bottom_left[0], top_right[0]):
         for j in range(bottom_left[1], top_right[1]):
