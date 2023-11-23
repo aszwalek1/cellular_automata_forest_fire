@@ -18,9 +18,12 @@ import capyle.utils as utils
 import numpy as np
 
 # Scaling factor used globally across multiple functions
-scale = 1
+scale = 4
+intervention_timestep = 100
+dropPoint = [100, 100] 
 
-def transition_func(grid, neighbourstates, neighbourcounts, fuel_grid):
+def transition_func(grid, neighbourstates, neighbourcounts, fuel_grid, timestep):
+    timestep[0] += 1
     # States: 
     # chaparral = 0
     # lake = 1
@@ -59,6 +62,10 @@ def transition_func(grid, neighbourstates, neighbourcounts, fuel_grid):
         canyon_burn = (neighbour == 5) & (grid == 3)
         grid[canyon_burn] = randomizer(3, delta, types[3])
 
+    if timestep[0] == intervention_timestep :
+        grid = drop_water(grid)
+
+
     return grid
 
 def randomizer(current_state, deltas, type):
@@ -72,6 +79,47 @@ def randomizer(current_state, deltas, type):
     new_state = np.random.choice([current_state, 5], 1, p=[(1-prob), prob])
     new_state = new_state[0]
 
+    return(new_state)
+
+def drop_water(grid):
+    #Circle version
+    # area = pi * r^2
+    radius = int(math.sqrt(12500 / math.pi))
+
+    # rectangle 
+    rectangle = int(2 * radius + 1) 
+    
+    cx = dropPoint[0]
+    cy = dropPoint[1]
+
+    for i in range(cy - radius, cy + radius):
+        for j in range(cx - radius, cx + radius):
+            if ((j - cx)**2 + (i - cy)**2) <= (radius **2):
+                grid[j][i] = water_prob(grid[j][i])
+
+    # Rectangle version
+    #cell_size = (50 / (50 * scale)) * 1000
+    #num_of_cells = 12500 / cell_size
+    #dropZoneLength = int(math.sqrt(numberOfCells))
+
+    #bottom_left = dropPoint
+    #top_right = [(dropPoint[0] + dropZoneLength), (dropPoint[1] + dropZoneLength)]
+
+    #for i in range(bottom_left[0], top_right[0]):
+    #    for j in range(bottom_left[1], top_right[1]):
+    #        grid[j][i] = water_prob(grid[j][i])
+
+    return grid
+
+def water_prob(current_state):
+    if current_state == 1:
+        new_state = current_state
+    elif current_state == 4:
+        new_state = current_state
+    else:
+        prob = .9
+        new_state = np.random.choice([current_state, 6], 1, p=[(1-prob), prob])
+        new_state = new_state[0]
     return(new_state)
 
 # ------------------ State and Fuel Grids Setup -------------------------
@@ -295,7 +343,7 @@ def pburn(deltas, type_weight):
     timestep_min = 60
 
     # Initial spread rate of fire
-    basic_spread_rate = 0.58
+    basic_spread_rate = 0.15
 
     # Size of each cell in metres
     cell_size = (50 / (50 * scale)) * 1000
@@ -326,11 +374,12 @@ def pburn(deltas, type_weight):
 def main():
     # Open the config object
     config = setup(sys.argv[1:])
-
+    
+    timestep = np.array([0])
     fuel_grid = fuel_setup()
 
     # Create grid object
-    grid = Grid2D(config, (transition_func, fuel_grid))
+    grid = Grid2D(config, (transition_func, fuel_grid, timestep))
 
     # Run the CA, save grid state every generation to timeline
     timeline = grid.run()
