@@ -18,7 +18,7 @@ import capyle.utils as utils
 import numpy as np
 
 # Scaling factor used globally across multiple functions
-scale = 1
+scale = 10
 
 def transition_func(grid, neighbourstates, neighbourcounts, fuel_grid):
     # States: 
@@ -34,7 +34,7 @@ def transition_func(grid, neighbourstates, neighbourcounts, fuel_grid):
     deltas = [(1, 1), (0, 1), (-1, 1), (1, 0), (-1, 0), (1, -1), (0, -1), (-1, -1)]
 
     # The cell states that can burn, and their weighting factor.
-    types = {0: 0.3, 1: 0, 2: 0.1, 3: 0.4}
+    types = {0: 0.3, 1: 0, 2: 0.1, 3: 0.9}
 
     # Deplete all burning cells fuel by 1 every generation
     burning_cells = (grid == 5)
@@ -58,7 +58,7 @@ def transition_func(grid, neighbourstates, neighbourcounts, fuel_grid):
         # Canyon cells with burning neighbours
         canyon_burn = (neighbour == 5) & (grid == 3)
         grid[canyon_burn] = randomizer(3, delta, types[3])
-        
+
 
     return grid
 
@@ -84,6 +84,7 @@ def setup(args):
     config.title = "Forest Fire"
     config.dimensions = 2
     config.states = (0, 1, 2, 3, 4, 5, 6)
+    config.wrap = False
     # ------------------------------------------------------------------------
 
     # ---- Override the defaults below (these may be changed at anytime) ----
@@ -126,9 +127,6 @@ def grid_setup(fire_location, scale):
     initial_grid = define_state(initial_grid, 3, scale, [35, 5], [37, 45]) # Canyon
     initial_grid = define_state(initial_grid, 4, scale, [8, 44], [12, 47]) # Town
 
-    # Add a border of inactive cells around the grid to prevent the fire from looping. 
-    initial_grid = add_borders(initial_grid, 50 * scale)
-
     return initial_grid
 
 def define_state(grid, state, scale, bottom_left, top_right):
@@ -153,37 +151,20 @@ def define_state(grid, state, scale, bottom_left, top_right):
     for i in range(bottom_left[0], top_right[0]):
         for j in range(bottom_left[1], top_right[1]):
             grid[j][i] = state
-        
-    grid[1][5] = 5
+    
+    # Setting burning cell
+    center_value = int(50 * scale/2)
+    grid[center_value][center_value] = 5
 
     return grid
 
-def add_borders(grid, dimensions):
-    """
-    Turns the edges of the grid into burnt/inactive cells
-    """
-    for x in range(0, dimensions):
-        y = 0
-        y2 = dimensions - 1
-
-        grid[x][y] = 6
-        grid[x][y2] = 6
-    
-    for y in range(0, dimensions):
-        x = 0
-        x2 = dimensions - 1
-
-        grid[x][y] = 6
-        grid[x2][y] = 6
-    
-    return grid
 
 def fuel_setup():
     """ Sets up the initial fuel grid to allow for varied burning duration
     depending on the type of terrain.
     """
     # Add the fuel value of chapparal (120 timesteps/hours = 5 days of burning)
-    fuel_grid = np.full((50 * scale, 50 * scale), 120)
+    fuel_grid = np.full((50 * scale, 50 * scale), 504)
     fuel_grid = define_fuel(fuel_grid, 1, scale, [15, 5], [20, 20]) # Lake
     fuel_grid = define_fuel(fuel_grid, 2, scale, [0, 25], [20, 35]) # Forest
     fuel_grid = define_fuel(fuel_grid, 3, scale, [35, 5], [37, 45]) # Canyon
@@ -217,9 +198,9 @@ def define_fuel(grid, state, scale, bottom_left, top_right):
             case 1:
                 fuel = -1 # Lake (Impossible to ignite)
             case 2:
-                fuel = 730 # Forest (730 hours = 1 month)
+                fuel = 2160 # Forest (730 hours = 1 month)
             case 3:
-                fuel = 7 # Canyon (7 hours)
+                fuel = 21 # Canyon (7 hours)
             case 4:
                 fuel = 1 # Town
 
@@ -231,14 +212,6 @@ def define_fuel(grid, state, scale, bottom_left, top_right):
     return (grid)
 
 # ------------------ Probability Calculation -------------------------
-
-def basic_prob(cell_L, R, t):
-    """ Calculates the base probability of a cell -
-    The likelihhod to burn irrespective of external factors like wind.
-    """
-    p0 = (R * 60 * t) / cell_L
-
-    return p0
 
 def pwind(v, wd, c1, c2, deltas):
     """
@@ -279,23 +252,15 @@ def pburn(deltas, type_weight):
     Returns:
     pburn: The probability of burning. If >= 1, the cell burns, else remains the same.
     """
-    # Amount of time passed in each generation (in minutes) 
-    timestep_min = 60
-
-    # Initial spread rate of fire
-    basic_spread_rate = 0.58
-
-    # Size of each cell in metres
-    cell_size = (50 / (50 * scale)) * 1000
 
     # Speed of wind in m/s
-    wind_speed = 8
+    wind_speed = 0
 
     # Direction of wind. 0 degrees is north to south, ascends clockwise
     wind_direction = 0
     
     # Base probability irrespective of wind and terrain type
-    p0 = basic_prob(cell_size, basic_spread_rate, timestep_min)
+    p0 = 0.58
 
     # Wind factor
     pw = pwind(wind_speed, wind_direction, 0.045, 0.191, deltas)
