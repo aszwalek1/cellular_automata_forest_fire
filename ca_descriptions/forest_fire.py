@@ -84,7 +84,7 @@ def randomizer(current_state, deltas, type):
 def drop_water(grid):
     #Circle version
     # area = pi * r^2
-    radius = int(math.sqrt(12500 / math.pi))
+    radius = int((math.sqrt(12500 / math.pi)) / scale)
 
     # rectangle 
     rectangle = int(2 * radius + 1) 
