@@ -194,15 +194,16 @@ def define_fuel(grid, state, scale, bottom_left, top_right):
     top_right[1] *= scale
     
     # Set the fuel value based on the state/terrain type
-    match state:
-            case 1:
-                fuel = -1 # Lake (Impossible to ignite)
-            case 2:
-                fuel = 2160 # Forest (730 hours = 1 month)
-            case 3:
-                fuel = 21 # Canyon (7 hours)
-            case 4:
-                fuel = 1 # Town
+    if state == 1:
+        fuel = -1 # Lake (Impossible to ignite)
+    elif state == 2:
+        fuel = 2160 # Forest (730 hours = 1 month)
+    elif state == 3:
+        fuel = 21 # Canyon (7 hours)
+    elif state == 4:
+        fuel = 1 # Town
+    else:
+        fuel = 0
 
     # Loop through all cells in the given rectangular block and set the fuel value
     for i in range(bottom_left[0], top_right[0]):
