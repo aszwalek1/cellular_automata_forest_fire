@@ -81,12 +81,14 @@ def randomizer(current_state, deltas, type):
     return(new_state)
 
 def drop_water(grid):
-    #Circle version
-    # area = pi * r^2
-    radius = int((math.sqrt(12500 / math.pi)) / scale)
+    """
+    Function used to represent the water drop intervention
 
-    # rectangle 
-    rectangle = int(2 * radius + 1) 
+    Returns:
+    grid: New grid with added burnt out cells where water has been dropped
+    on burning cells
+    """
+    radius = int((math.sqrt(12500 / math.pi)) / scale)
     
     cx = dropPoint[0]
     cy = dropPoint[1]
@@ -96,21 +98,15 @@ def drop_water(grid):
             if ((j - cx)**2 + (i - cy)**2) <= (radius **2):
                 grid[j][i] = water_prob(grid[j][i])
 
-    # Rectangle version
-    #cell_size = (50 / (50 * scale)) * 1000
-    #num_of_cells = 12500 / cell_size
-    #dropZoneLength = int(math.sqrt(numberOfCells))
-
-    #bottom_left = dropPoint
-    #top_right = [(dropPoint[0] + dropZoneLength), (dropPoint[1] + dropZoneLength)]
-
-    #for i in range(bottom_left[0], top_right[0]):
-    #    for j in range(bottom_left[1], top_right[1]):
-    #        grid[j][i] = water_prob(grid[j][i])
-
     return grid
 
 def water_prob(current_state):
+    """
+    Decides whether the water drop intervention was successful for a given cell 
+
+    Returns:
+    new_state: new state of the input cell
+    """
     if current_state == 1:
         new_state = current_state
     elif current_state == 4:
