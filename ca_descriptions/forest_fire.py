@@ -39,7 +39,7 @@ def transition_func(grid, neighbourstates, neighbourcounts, fuel_grid, timestep)
     deltas = [(1, 1), (0, 1), (-1, 1), (1, 0), (-1, 0), (1, -1), (0, -1), (-1, -1)]
 
     # The cell states that can burn, and their weighting factor.
-    types = {0: 0.1, 1: 0, 2: 0.05, 3: 1}
+    types = {0: 0.1, 1: 0, 2: 0.02, 3: 1}
 
     # Deplete all burning cells fuel by 1 every generation
     burning_cells = (grid == 5)
@@ -72,8 +72,8 @@ def transition_func(grid, neighbourstates, neighbourcounts, fuel_grid, timestep)
             # Update the grid with the new burning cells
             grid[cell_burn] = updated_grid
 
-    if timestep[0] == intervention_timestep :
-        grid = drop_water(grid)
+#    if timestep[0] == intervention_timestep :
+#        grid = drop_water(grid)
     
     return grid
 
