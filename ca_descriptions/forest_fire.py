@@ -19,6 +19,8 @@ import numpy as np
 
 # Scaling factor used globally across multiple functions
 scale = 10
+intervention_timestep = 100
+dropPoint = [100, 100] 
 
 def transition_func(grid, neighbourstates, neighbourcounts, fuel_grid, timestep):
     # States: 
@@ -69,6 +71,9 @@ def transition_func(grid, neighbourstates, neighbourcounts, fuel_grid, timestep)
 
             # Update the grid with the new burning cells
             grid[cell_burn] = updated_grid
+
+    if timestep[0] == intervention_timestep :
+        grid = drop_water(grid)
     
     return grid
 
@@ -83,6 +88,43 @@ def randomizer(current_state, deltas, type, size):
     new_grid = np.random.choice([current_state, 5], size, p=[(1-prob), prob])
 
     return(new_grid)
+
+def drop_water(grid):
+    """
+    Function used to represent the water drop intervention
+
+    Returns:
+    grid: New grid with added burnt out cells where water has been dropped
+    on burning cells
+    """
+    radius = int((math.sqrt(12500 / math.pi)) / scale)
+    
+    cx = dropPoint[0]
+    cy = dropPoint[1]
+
+    for i in range(cy - radius, cy + radius):
+        for j in range(cx - radius, cx + radius):
+            if ((j - cx)**2 + (i - cy)**2) <= (radius **2):
+                grid[j][i] = water_prob(grid[j][i])
+
+    return grid
+
+def water_prob(current_state):
+    """
+    Decides whether the water drop intervention was successful for a given cell 
+
+    Returns:
+    new_state: new state of the input cell
+    """
+    if current_state == 1:
+        new_state = current_state
+    elif current_state == 4:
+        new_state = current_state
+    else:
+        prob = .9
+        new_state = np.random.choice([current_state, 6], 1, p=[(1-prob), prob])
+        new_state = new_state[0]
+    return(new_state)
 
 # ------------------ State and Fuel Grids Setup -------------------------
 
@@ -204,15 +246,16 @@ def define_fuel(grid, state, scale, bottom_left, top_right):
     top_right[1] *= scale
     
     # Set the fuel value based on the state/terrain type
-    match state:
-            case 1:
-                fuel = -1 # Lake (Impossible to ignite)
-            case 2:
-                fuel = 2160 # Forest (2160 * 20 minutes = 1 month)
-            case 3:
-                fuel = 21 # Canyon (21 * 20 minutes = 7 hours)
-            case 4:
-                fuel = 1 # Town
+    if state == 1:
+        fuel = -1 # Lake (Impossible to ignite)
+    elif state == 2:
+        fuel = 2160 # Forest (2160 * 20 minutes = 1 month)
+    elif state == 3:
+        fuel = 21 # Canyon (21 * 20 minutes = 7 hours)
+    elif state == 4:
+        fuel = 1 # Town
+    else:
+        fuel = 0
 
     # Loop through all cells in the given rectangular block and set the fuel value
     for i in range(bottom_left[0], top_right[0]):
@@ -262,7 +305,6 @@ def pburn(deltas, type_weight):
     Returns:
     pburn: The probability of burning. If >= 1, the cell burns, else remains the same.
     """
-
     # Speed of wind in m/s
     wind_speed = 9
 
@@ -289,7 +331,8 @@ def pburn(deltas, type_weight):
 def main():
     # Open the config object
     config = setup(sys.argv[1:])
-
+    
+    timestep = np.array([0])
     fuel_grid = fuel_setup()
 
     timestep = np.array([0, 0])
