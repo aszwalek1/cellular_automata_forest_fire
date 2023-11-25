@@ -20,7 +20,7 @@ import numpy as np
 # Scaling factor used globally across multiple functions
 scale = 10
 
-def transition_func(grid, neighbourstates, neighbourcounts, fuel_grid):
+def transition_func(grid, neighbourstates, neighbourcounts, fuel_grid, timestep):
     # States: 
     # chaparral = 0
     # lake = 1
@@ -30,11 +30,14 @@ def transition_func(grid, neighbourstates, neighbourcounts, fuel_grid):
     # burning = 5
     # burnt = 6
 
+    # Iterate the timestep variable
+    timestep[0] += 1
+
     # The cartesian difference (x, y) between a given cell and its neighbours, in this order: NW, N, NE, W, E, SW, S, SE 
     deltas = [(1, 1), (0, 1), (-1, 1), (1, 0), (-1, 0), (1, -1), (0, -1), (-1, -1)]
 
     # The cell states that can burn, and their weighting factor.
-    types = {0: 0.3, 1: 0, 2: 0.1, 3: 0.9}
+    types = {0: 0.1, 1: 0, 2: 0.05, 3: 1}
 
     # Deplete all burning cells fuel by 1 every generation
     burning_cells = (grid == 5)
@@ -43,26 +46,33 @@ def transition_func(grid, neighbourstates, neighbourcounts, fuel_grid):
     # Transition depleted cells to burnt state (6)
     burnt_out = (fuel_grid == 0)
     grid[burnt_out] = 6
+
+    town_reached = (grid == 4) & (neighbourcounts[5] >= 1)
+
+    # Print the time taken to reach the town to terminal
+    if grid[town_reached].size >= 1 and timestep[1] == 0:
+        print("Fire has reached town at time-step: " + str(timestep[0]))
+        print("Minutes elapsed: " + str(timestep[0] * 10))
+        print("Days elapsed: " + str(((timestep[0] * 10) * 0.000694444)))
+        timestep[1] = 1
+
+
+    for state in [0, 2, 3]:
+        # Calculate the probability for each cell to burn and apply it on the grid
+        for (delta, neighbour) in zip(deltas, neighbourstates):
+        
+            # Boolean array for cell of state 0, 2 or 3 with burning neighbours
+            cell_burn = (neighbour == 5) & (grid == state)
+
+            # Run the randomizer on each cell with a burning neighbour
+            updated_grid = randomizer(state, delta, types[state], cell_burn.sum())
+
+            # Update the grid with the new burning cells
+            grid[cell_burn] = updated_grid
     
-    # Calculate the probability for each cell to burn and apply it on the grid
-    for (delta, neighbour) in zip(deltas, neighbourstates):
-        
-        # Chaparral cells with burning neighbours
-        chaparral_burn = (neighbour == 5) & (grid == 0)
-        grid[chaparral_burn] = randomizer(0, delta, types[0])
-        
-        # Forest cells with burning neighbours
-        forest_burn = (neighbour == 5) & (grid == 2)
-        grid[forest_burn] = randomizer(2, delta, types[2])
-
-        # Canyon cells with burning neighbours
-        canyon_burn = (neighbour == 5) & (grid == 3)
-        grid[canyon_burn] = randomizer(3, delta, types[3])
-
-
     return grid
 
-def randomizer(current_state, deltas, type):
+def randomizer(current_state, deltas, type, size):
     """
     Sets the current cell(s) to state 5 (burning) with a calculated probability.
 
@@ -70,10 +80,9 @@ def randomizer(current_state, deltas, type):
     new_state: Either 5 (The cell(s) starts burning) or the same state of the cell(s) initially
     """
     prob = pburn(deltas, type)
-    new_state = np.random.choice([current_state, 5], 1, p=[(1-prob), prob])
-    new_state = new_state[0]
+    new_grid = np.random.choice([current_state, 5], size, p=[(1-prob), prob])
 
-    return(new_state)
+    return(new_grid)
 
 # ------------------ State and Fuel Grids Setup -------------------------
 
@@ -96,11 +105,10 @@ def setup(args):
     burning = (194/255, 24/255, 7/255)
     burnt = (0, 0, 0)
     config.state_colors = [chaparral, lake, forest, canyon, town, burning, burnt]
-
-
-    # config.num_generations = 150
     config.grid_dims = (50 * scale, 50 * scale)
-    config.initial_grid = grid_setup("incinerator", scale)
+
+    # Choose the burn site: incinerator or power plant
+    config.initial_grid = grid_setup("power plant", scale)
 
     # ----------------------------------------------------------------------
 
@@ -121,11 +129,17 @@ def grid_setup(fire_location, scale):
     Returns:
     initial_grid: The grid, fully initialized
     """
+    if fire_location == "incinerator":
+        burn_site = (0, int(50 * scale) - 1)
+    elif fire_location == "power plant":
+        burn_site = (0, int(10 * scale) - 1)
+
     initial_grid = np.full((50 * scale, 50 * scale), 0) # Chaparral
     initial_grid = define_state(initial_grid, 1, scale, [15, 5], [20, 20]) # Lake
     initial_grid = define_state(initial_grid, 2, scale, [0, 25], [20, 35]) # Forest
     initial_grid = define_state(initial_grid, 3, scale, [35, 5], [37, 45]) # Canyon
     initial_grid = define_state(initial_grid, 4, scale, [8, 44], [12, 47]) # Town
+    initial_grid[burn_site[0]][burn_site[1]] = 5
 
     return initial_grid
 
@@ -151,10 +165,6 @@ def define_state(grid, state, scale, bottom_left, top_right):
     for i in range(bottom_left[0], top_right[0]):
         for j in range(bottom_left[1], top_right[1]):
             grid[j][i] = state
-    
-    # Setting burning cell
-    center_value = int(50 * scale/2)
-    grid[center_value][center_value] = 5
 
     return grid
 
@@ -163,8 +173,8 @@ def fuel_setup():
     """ Sets up the initial fuel grid to allow for varied burning duration
     depending on the type of terrain.
     """
-    # Add the fuel value of chapparal (120 timesteps/hours = 5 days of burning)
-    fuel_grid = np.full((50 * scale, 50 * scale), 504)
+    # Add the fuel value of chapparal (360 timesteps * 20 mins = 5 days of burning)
+    fuel_grid = np.full((50 * scale, 50 * scale), 360)
     fuel_grid = define_fuel(fuel_grid, 1, scale, [15, 5], [20, 20]) # Lake
     fuel_grid = define_fuel(fuel_grid, 2, scale, [0, 25], [20, 35]) # Forest
     fuel_grid = define_fuel(fuel_grid, 3, scale, [35, 5], [37, 45]) # Canyon
@@ -198,9 +208,9 @@ def define_fuel(grid, state, scale, bottom_left, top_right):
             case 1:
                 fuel = -1 # Lake (Impossible to ignite)
             case 2:
-                fuel = 2160 # Forest (730 hours = 1 month)
+                fuel = 2160 # Forest (2160 * 20 minutes = 1 month)
             case 3:
-                fuel = 21 # Canyon (7 hours)
+                fuel = 21 # Canyon (21 * 20 minutes = 7 hours)
             case 4:
                 fuel = 1 # Town
 
@@ -254,7 +264,7 @@ def pburn(deltas, type_weight):
     """
 
     # Speed of wind in m/s
-    wind_speed = 0
+    wind_speed = 9
 
     # Direction of wind. 0 degrees is north to south, ascends clockwise
     wind_direction = 0
@@ -263,7 +273,7 @@ def pburn(deltas, type_weight):
     p0 = 0.58
 
     # Wind factor
-    pw = pwind(wind_speed, wind_direction, 0.045, 0.191, deltas)
+    pw = pwind(wind_speed, wind_direction, 0.045, 0.131, deltas)
     
     # Probability of burning = Base probability * wind factor * terrain type factor
     pburn = p0 * pw * type_weight
@@ -282,8 +292,10 @@ def main():
 
     fuel_grid = fuel_setup()
 
+    timestep = np.array([0, 0])
+
     # Create grid object
-    grid = Grid2D(config, (transition_func, fuel_grid))
+    grid = Grid2D(config, (transition_func, fuel_grid, timestep))
 
     # Run the CA, save grid state every generation to timeline
     timeline = grid.run()
