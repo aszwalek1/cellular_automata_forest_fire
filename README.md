@@ -4,15 +4,12 @@ Alicja Szwalek, Omar Abdelmageed, Cameron Robinson
 ## Running Guide
 See below for a quickstart guide:
 
-1. `git clone https://github.com/aszwalek1/COM3524-Group-Project`
-2. `cd [target-directory]`
-3. Execute main.py either by:
-    * `run.bat` / `run.sh`
-    * `python main.py`
+1. Place forest_fire.py in the ca_descriptions folder of your CAPyLE installation
+2. Run CAPyLE
 2. Use the menu bar to select File -> Open. This will open in the folder `./ca_descriptions`.
 3. Open the file;
   - `forest_fire.py` which is the file for this assignment
-3. Set you desired generations and save the configuration to run the simulation
+3. Set you desired generations and save the configuration to run the simulation (around 2000 is recommended to view the fire reaching the town)
 
 ## Testing
 All parameters for testing and altering the program are provided as global variables that the user can change at the top of forest_fire.py
