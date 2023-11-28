@@ -139,27 +139,6 @@ def transition_func(grid, neighbourstates, neighbourcounts, fuel_grid, timestep)
         if timestep[0] == intervention_timestep :
             grid = drop_water(grid)
     
-<<<<<<< HEAD
-    # Calculate the probability for each cell to burn and apply it on the grid
-    for (delta, neighbour) in zip(deltas, neighbourstates):
-        
-        # Chaparral cells with burning neighbours
-        chaparral_burn = (neighbour == 5) & (grid == 0)
-        grid[chaparral_burn] = randomizer(0, delta, types[0])
-        
-        # Forest cells with burning neighbours
-        forest_burn = (neighbour == 5) & (grid == 2)
-        grid[forest_burn] = randomizer(2, delta, types[2])
-
-        # Canyon cells with burning neighbours
-        canyon_burn = (neighbour == 5) & (grid == 3)
-        grid[canyon_burn] = randomizer(3, delta, types[3])
-
-    #if timestep[0] == intervention_timestep :
-    #    grid = drop_water(grid)
-
-=======
->>>>>>> omar
     return grid
 
 def randomizer(current_state, deltas, type, size):
@@ -184,13 +163,8 @@ def drop_water(grid):
     """
     radius = int((math.sqrt(12500 / math.pi)) / scale)
     
-<<<<<<< HEAD
     cx = drop_point[0]
     cy = drop_point[1]
-=======
-    cy = drop_point[0]
-    cx = drop_point[1]
->>>>>>> omar
 
     for i in range(cy - radius, cy + radius):
         for j in range(cx - radius, cx + radius):
