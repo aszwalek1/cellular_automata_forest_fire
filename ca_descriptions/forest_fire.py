@@ -76,7 +76,7 @@ use_water_intervention = True
 intervention_timestep = 100
 
 # Point [x, y] on the map that the water intervention will be dropped 
-drop_point = [100, 100]
+drop_point = [100, 200]
 
 
 # ------------------ The Code -------------------------
@@ -163,8 +163,8 @@ def drop_water(grid):
     """
     radius = int((math.sqrt(12500 / math.pi)) / scale)
     
-    cx = drop_point[0]
-    cy = drop_point[1]
+    cx = drop_point[1]
+    cy = drop_point[0]
 
     for i in range(cy - radius, cy + radius):
         for j in range(cx - radius, cx + radius):
