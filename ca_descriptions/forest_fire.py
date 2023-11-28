@@ -20,7 +20,7 @@ import numpy as np
 # Scaling factor used globally across multiple functions
 scale = 10
 intervention_timestep = 100
-dropPoint = [100, 100] 
+drop_point = [100, 100] 
 
 def transition_func(grid, neighbourstates, neighbourcounts, fuel_grid, timestep):
     timestep[0] += 1
@@ -62,8 +62,8 @@ def transition_func(grid, neighbourstates, neighbourcounts, fuel_grid, timestep)
         canyon_burn = (neighbour == 5) & (grid == 3)
         grid[canyon_burn] = randomizer(3, delta, types[3])
 
-    if timestep[0] == intervention_timestep :
-        grid = drop_water(grid)
+    #if timestep[0] == intervention_timestep :
+    #    grid = drop_water(grid)
 
     return grid
 
@@ -90,8 +90,8 @@ def drop_water(grid):
     """
     radius = int((math.sqrt(12500 / math.pi)) / scale)
     
-    cx = dropPoint[0]
-    cy = dropPoint[1]
+    cx = drop_point[0]
+    cy = drop_point[1]
 
     for i in range(cy - radius, cy + radius):
         for j in range(cx - radius, cx + radius):

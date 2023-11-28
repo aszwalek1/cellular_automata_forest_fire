@@ -18,6 +18,7 @@ See below for a quickstart guide:
    - 90 is East wind
    - 180 is South wind
    - 270 is West wind
+6. For water drop test, set the intervention_timestep variable to your desired timestep and a location [y,x] for the drop_point variable. Once set uncomment the if statement at the end of the transition function.
 
 
 ## Acknowledgements
