@@ -64,7 +64,20 @@ lake_state = 1
 # NOTE: This will also change the basic rate of spread (ROS) of the fire accordingly so the simulation
 # visually moves at the same speed and has the same iteration count, but actual timescales will shift.
 # A value of 10 was chosen to have enough time to show some of the chapparal burning.
-time_value = 10
+time_value = 3
+
+
+# --------------- WATER DROP INTERVENTION -------------
+# Set to true to use water drop
+use_water_intervention = True
+
+# Timestep at wich water intevention is deployed
+# Simulation usually complete around 2000 interventions so value lower than that recommended
+intervention_timestep = 100
+
+# Point [x, y] on the map that the water intervention will be dropped 
+drop_point = [100, 100]
+
 
 # ------------------ The Code -------------------------
 
@@ -72,9 +85,6 @@ time_value = 10
 # Scaling factor used globally across multiple functions
 scale = 10
 
-# Water drop paramaters
-intervention_timestep = 100
-dropPoint = [100, 100]
 
 def transition_func(grid, neighbourstates, neighbourcounts, fuel_grid, timestep):
     # States: 
@@ -126,8 +136,9 @@ def transition_func(grid, neighbourstates, neighbourcounts, fuel_grid, timestep)
             # Update the grid with the new burning cells
             grid[cell_burn] = updated_grid
 
-#    if timestep[0] == intervention_timestep :
-#        grid = drop_water(grid)
+    if use_water_intervention:
+        if timestep[0] == intervention_timestep :
+            grid = drop_water(grid)
     
     return grid
 
@@ -153,8 +164,8 @@ def drop_water(grid):
     """
     radius = int((math.sqrt(12500 / math.pi)) / scale)
     
-    cx = dropPoint[0]
-    cy = dropPoint[1]
+    cy = drop_point[0]
+    cx = drop_point[1]
 
     for i in range(cy - radius, cy + radius):
         for j in range(cx - radius, cx + radius):
